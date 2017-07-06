@@ -46,13 +46,12 @@ void svpwm(double *abc, double *dq, double phi)
 	double q = dq[1];
 	double mag = sqrt(d*d + q*q)/4;
 	double thetta = 0.0;
-	if(fabs(q) > 0.01){
-		 thetta = (d>0)?atan(d/q):(atan(d/q)+pi);
+	if(fabs(d) > 0.01){
+		 thetta = (d>0)?atan(q/d):(atan(q/d)+pi);
 	}
-	else thetta = (d>0)?0.0:pi;
+	else thetta = (q>0)?(pi/2):(-pi/2);
 	
-	phi = phi;
-	//phi = phi = pi/3;
+	phi = phi + thetta;
 	
 	if(phi<0) phi += 2*pi;
 	else if(phi>2*pi) phi -= 2*pi;
@@ -138,12 +137,9 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		dq[0] = dreg.y;
 		dq[1] = qreg.y;
 		// convert dq voltages to abc
-		dq_to_abc(&r_OUT(0, 0), dq, phi);
-		svpwm(&r_OUT(1, 0), dq, phi);
-		
-		r_OUT(2, 0) = dq[0];
-		r_OUT(2, 1) = dq[1];
-		    
+		//dq_to_abc(&r_OUT(0, 0), dq, phi);
+		svpwm(&r_OUT(0, 0), dq, phi);
+			    
 	break;
 	case 2:
 	
