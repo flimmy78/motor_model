@@ -44,7 +44,8 @@ void svpwm(double *abc, double *dq, double phi)
 {
 	double d = dq[0];
 	double q = dq[1];
-	double mag = sqrt(d*d + q*q)/4;
+	double mag = sqrt(d*d + q*q);
+	if(mag > 720) mag = 720;
 	double thetta = 0.0;
 	if(fabs(d) > 0.01){
 		 thetta = (d>0)?atan(q/d):(atan(q/d)+pi);
@@ -55,13 +56,13 @@ void svpwm(double *abc, double *dq, double phi)
 	
 	if(phi<0) phi += 2*pi;
 	else if(phi>2*pi) phi -= 2*pi;
-	
+		
 	double r1;
 	double r2;
 	
 	if(phi<pi/3){
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);	
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);	
 		
 		abc[0] = r1+r2;
 		abc[1] = -r1+r2;
@@ -69,8 +70,8 @@ void svpwm(double *abc, double *dq, double phi)
 	}
 	else if(phi<2*pi/3){
 		phi -= pi/3;
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);		
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);		
 		
 		abc[0] = r1-r2;
 		abc[1] = r1+r2;
@@ -78,8 +79,8 @@ void svpwm(double *abc, double *dq, double phi)
 	}
 	else if(phi<pi){
 		phi -= 2*pi/3;
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);		
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);		
 		
 		abc[0] = -r1-r2;
 		abc[1] = r1+r2;
@@ -87,8 +88,8 @@ void svpwm(double *abc, double *dq, double phi)
 	}
 	else if(phi<4*pi/3){
 		phi -= 3*pi/3;
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);		
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);		
 		
 		abc[0] = -r1-r2;
 		abc[1] = r1-r2;
@@ -96,8 +97,8 @@ void svpwm(double *abc, double *dq, double phi)
 	}		
 	else if(phi<5*pi/3){
 		phi -= 4*pi/3;
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);
 		
 		abc[0] = -r1+r2;
 		abc[1] = -r1-r2;
@@ -105,8 +106,8 @@ void svpwm(double *abc, double *dq, double phi)
 	}			
 	else if(phi<2*pi){
 		phi -= 5*pi/3;
-		double r1 = (2*sqrt(3))*mag*sin(pi/3-phi);
-		double r2 = (2*sqrt(3))*mag*sin(phi);		
+		double r1 = mag*sin(pi/3-phi);
+		double r2 = mag*sin(phi);		
 		
 		abc[0] = +r1+r2;
 		abc[1] = -r1-r2;
