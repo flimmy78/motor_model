@@ -17,8 +17,8 @@ if bOK then
   ulink(ilib);
 end
 //
-link('./pi_reg_cur/.libs/libpi_reg_cur.so.0.0.0', 'pi_reg_cur', 'c');
-link('./pi_reg_speed/.libs/libpi_reg_speed.so.0.0.0', 'pi_reg_speed', 'c');
+link('libregcur.so', 'pi_reg_cur', 'c');
+link('libregspeed.so', 'pi_reg_speed', 'c');
 
 // remove temp. variables on stack
 clear my_path;
