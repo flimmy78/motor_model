@@ -62,10 +62,10 @@ inline void dq_to_abc(int32_t *abc, int32_t *dq, int32_t angle)
 	abc[2] = dq[0]*cos_tb[1023&(angle+2*512/3)] - dq[1]*cos_tb[1023&(angle+2*512/3+3*512/2)];
 }
 
-void svpwm(double *abc, double *dq, double phi)
+inline void svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 {
-	double d = dq[0];
-	double q = dq[1];
+	double d = (double)dq[0]/1024.0/1024.0;
+	double q = (double)dq[1]/1024.0/1024.0;
 	double mag = sqrt(d*d + q*q);
 	if(mag > 720) mag = 720;
 	double thetta = 0.0;
@@ -74,7 +74,7 @@ void svpwm(double *abc, double *dq, double phi)
 	}
 	else thetta = (q>0)?(pi/2):(-pi/2);
 	
-	phi = phi + thetta;
+	double phi = angle*2*pi/1024 + thetta;
 	
 	if(phi<0) phi += 2*pi;
 	else if(phi>2*pi) phi -= 2*pi;
@@ -154,18 +154,23 @@ void pi_reg_cur(scicos_block *blk, int flag)
     switch(flag)
     {
 	case 1:		
-		
-		//phi = r_IN(4, 0)*2*pi/4096;
+		// convert dq voltages to abc			
+		/*
 		dq[0] = dreg.y/1024;
 		dq[1] = qreg.y/1024;
-		// convert dq voltages to abc	
 		dq_to_abc(abc, dq, angle);
-		
 		r_OUT(0, 0) = (double)abc[0]/1024/1024;
 		r_OUT(0, 1) = (double)abc[1]/1024/1024;
 		r_OUT(0, 2) = (double)abc[2]/1024/1024;
-				
-		//svpwm(&r_OUT(0, 0), dq, phi);
+		*/
+
+		dq[0] = dreg.y;
+		dq[1] = qreg.y;				
+		svpwm(abc, dq, angle);		
+		r_OUT(0, 0) = (double)abc[0];
+		r_OUT(0, 1) = (double)abc[1];
+		r_OUT(0, 2) = (double)abc[2];				
+		
 			    
 	break;
 	case 2:
