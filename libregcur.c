@@ -138,8 +138,8 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		dq[0] = dreg.y;
 		dq[1] = qreg.y;
 		// convert dq voltages to abc
-		//dq_to_abc(&r_OUT(0, 0), dq, phi);
-		svpwm(&r_OUT(0, 0), dq, phi);
+		dq_to_abc(&r_OUT(0, 0), dq, phi);
+		//svpwm(&r_OUT(0, 0), dq, phi);
 			    
 	break;
 	case 2:
