@@ -56,10 +56,24 @@ inline void dq_to_abc(int32_t *abc, int32_t *dq, int32_t angle)
 	abc[1] = (int32_t)( dq[0]*cos(phi-2*pi/3) - dq[1]*sin(phi-2*pi/3) );
 	abc[2] = (int32_t)( dq[0]*cos(phi+2*pi/3) - dq[1]*sin(phi+2*pi/3) );
 	*/
-	
-	abc[0] = dq[0]*cos_tb[angle] - 		  		  dq[1]*cos_tb[1023&(angle+3*512/2)];
+
+	abc[0] = dq[0]*cos_tb[angle] 				- dq[1]*cos_tb[1023&(angle+3*512/2)];
 	abc[1] = dq[0]*cos_tb[1023&(angle+4*512/3)] - dq[1]*cos_tb[1023&(angle+4*512/3+3*512/2)];
 	abc[2] = dq[0]*cos_tb[1023&(angle+2*512/3)] - dq[1]*cos_tb[1023&(angle+2*512/3+3*512/2)];
+}
+
+inline double getatan(int32_t *dq)
+{
+	double d = (double)dq[0];
+	double q = (double)dq[1];
+	
+	double thetta = 0.0;
+	if(fabs(d) > 0.01){
+		 thetta = (d>0)?atan(q/d):(atan(q/d)+pi);
+	}
+	else thetta = (q>0)?(pi/2):(-pi/2);
+	
+	return thetta;
 }
 
 inline void svpwm(int32_t *abc, int32_t *dq, int32_t angle)
@@ -136,6 +150,50 @@ inline void svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 		abc[2] = r1-r2;
 	}
 	
+}
+
+inline void test_svpwm(int32_t *abc, int32_t *dq, int32_t angle)
+{
+	double phi = angle*2*pi/1024;
+	double d1 = (double)dq[0]/1024.0/1024.0;
+	double q1 = (double)dq[1]/1024.0/1024.0;
+	
+	// rotate vector by phi
+	double d = d1*cos(phi) - q1*sin(phi);
+	double q = d1*sin(phi) + q1*cos(phi);
+	
+	int ns = 1;
+	
+	double r1;
+	double r2;	
+	
+	// find sector
+	if(q >= 0){
+		if(fabs(d) > fabs(q)/sqrt(3)){
+			if(d >= 0) ns = 1;
+			else ns = 3;
+		}
+		else ns = 2; 		
+	}
+	else{
+		if(fabs(d) > fabs(q)/sqrt(3)){
+			if(d >= 0) ns = 6;
+			else ns = 4;
+		}
+		else ns = 5;
+	}
+	
+	// rotate vector 
+	phi = -(ns-1)*pi/3;
+	 d1 = d*cos(phi) - q*sin(phi);
+	 q1 = d*sin(phi) + q*cos(phi);	
+	
+	switch(ns){
+		case 1:
+			
+		break;
+	}
+		
 }
 
 void pi_reg_cur(scicos_block *blk, int flag)
