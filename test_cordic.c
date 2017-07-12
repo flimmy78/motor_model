@@ -64,16 +64,19 @@ int32_t getatan(int32_t *v)
 double cord_atan(int32_t *v)
 {
 	const double AngTable[] = {45, 26.565, 14.036, 7.125, 3.576, 1.790, 0.895, 0.448, 0.224, 0.112};
+	const double kc[] = {0.7071, 0.6325, 0.6136,  0.6088, 0.6076, 0.6074, 0.6073, 0.6073, 0.6073, 0.6073};
 	double SumAngle = 0; 
 	int i = 0;
 	int x, y, x1, y1;
+	int ns = 0;
 
 	x = abs(v[0]);
 	y = v[1];
 
 	for(i = 0; i < 10; i++)
 	{		
-		printf("%.2f\n", SumAngle);
+		//printf("%.2f\n", SumAngle);
+		ns++;
 		
 		x1 = x;
 		y1 = y;
@@ -92,6 +95,10 @@ double cord_atan(int32_t *v)
 	
 	if(v[0] < 0) SumAngle = 180-SumAngle;		
 	if(SumAngle < 0) SumAngle += 360;
+	
+	printf("ns=%d\n", ns);
+	printf("angle=%.2f\n", SumAngle);
+	printf("mag=%.2f\n", kc[ns-1]*x);
 	
 	return  SumAngle;
 }
@@ -114,7 +121,8 @@ int main(int argc, char *argv[])
 	v[1] = (int)a[1];
 
 	//printf("angle=%.2f\n", 180.0*getatan(v)/MY_PI);
-	printf("angle=%.2f\n", cord_atan(v));
+	//printf("angle=%.2f\n", cord_atan(v));
+	cord_atan(v);
 	
 	/*
 	printf("%d %d\n", v[0], v[1]);
