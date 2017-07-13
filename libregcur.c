@@ -2,8 +2,10 @@
 #include <time.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define pi		3.14159265358979323846	/* pi */
+#define MY_PI 512
 
 #define r_IN(n, i) ((GetRealInPortPtrs(blk, n+1))[(i)]) 
 #define r_OUT(n, i) ((GetRealOutPortPtrs(blk, n+1))[(i)])
@@ -19,6 +21,16 @@ struct pi_reg_state{
 	int32_t a;
 	int32_t y;	
 };
+
+inline int32_t mycos(int32_t a)
+{
+	return cos_tb[1023&a];
+}
+
+inline int32_t mysin(int32_t a)
+{
+	return cos_tb[1023&(a+3*MY_PI/2)];
+}
 
 inline void update(struct pi_reg_state *s, int32_t e)
 {
@@ -76,6 +88,109 @@ inline double getatan(int32_t *dq)
 	return thetta;
 }
 
+inline void cord_atan(int32_t *v, int32_t *ang, int32_t *mag)
+{
+	const int32_t AngTable[] = {128, 76, 40, 20, 10, 5, 3, 1};
+	const int32_t kc[] = {724,  648, 628,  623,  623,  622,  622,  622};
+	int32_t SumAngle = 0; 
+	int i = 0;
+	int x, y, x1, y1;
+	int ns = 0;
+
+	x = abs(v[0]);
+	y = v[1];
+
+	for(i = 0; i < 8; i++)
+	{		
+		ns++;
+		
+		x1 = x;
+		y1 = y;
+			
+		if(y > 0){
+			x = x1 + (y1 >> i); 
+			y = y1 - (x1 >> i); 
+			SumAngle = SumAngle + AngTable[i]; 
+		}else{
+			x = x1 - (y1 >> i); 
+			y = y1 + (x1 >> i); 
+			SumAngle = SumAngle - AngTable[i]; 
+		}
+		if(y == 0) break;
+	}
+	
+	if(v[0] < 0) SumAngle = MY_PI-SumAngle;		
+	if(SumAngle < 0) SumAngle += 2*MY_PI;	
+	
+	*ang = SumAngle;
+	*mag = (kc[ns-1]*x)/1024;
+}
+
+inline void svpwm(int32_t *abc, int32_t *dq, int32_t phase)
+{
+	int32_t mag;
+	int32_t ang;
+	cord_atan(dq, &ang, &mag);
+	
+	mag /= 1024;
+	int32_t phi = 1023&(phase + ang);
+
+	if(phi<MY_PI/3){
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;
+		
+		abc[0] = r1+r2;
+		abc[1] = -r1+r2;
+		abc[2] = -r1-r2;
+	}
+	else if(phi<2*MY_PI/3){
+		phi -= MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;
+		
+		abc[0] = r1-r2;
+		abc[1] = r1+r2;
+		abc[2] = -r1-r2;		
+	}
+	else if(phi<MY_PI){
+		phi -= 2*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;
+		
+		abc[0] = -r1-r2;
+		abc[1] = r1+r2;
+		abc[2] = -r1+r2;
+	}
+	else if(phi<4*MY_PI/3){
+		phi -= 3*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;
+		
+		abc[0] = -r1-r2;
+		abc[1] = r1-r2;
+		abc[2] = r1+r2;		
+	}		
+	else if(phi<5*MY_PI/3){
+		phi -= 4*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;
+		
+		abc[0] = -r1+r2;
+		abc[1] = -r1-r2;
+		abc[2] = r1+r2;	
+	}			
+	else if(phi<2*MY_PI){
+		phi -= 5*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi)/1024;
+		int32_t r2 = mag*mysin(phi)/1024;		
+		
+		abc[0] = +r1+r2;
+		abc[1] = -r1-r2;
+		abc[2] = r1-r2;
+	}	
+}
+
+/*
 inline void svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 {
 	double d = (double)dq[0]/1024.0/1024.0;
@@ -151,7 +266,8 @@ inline void svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 	}
 	
 }
-
+*/
+/*
 inline void test_svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 {
 	double phi = angle*2*pi/1024;
@@ -195,13 +311,12 @@ inline void test_svpwm(int32_t *abc, int32_t *dq, int32_t angle)
 	}
 		
 }
-
+*/
 void pi_reg_cur(scicos_block *blk, int flag)
 {
 	static struct pi_reg_state dreg = {0, 0, 0, 0};
 	static struct pi_reg_state qreg = {0, 0, 0, 0};
-	static double phi;
-	static long angle = 0;
+	static int32_t phase = 0;
 	
 	int32_t dq[2];	
 	int32_t abc[3];
@@ -224,11 +339,18 @@ void pi_reg_cur(scicos_block *blk, int flag)
 
 		dq[0] = dreg.y;
 		dq[1] = qreg.y;				
-		svpwm(abc, dq, angle);		
+		
+		int32_t mag_int;
+		int32_t ang;
+		cord_atan(dq, &ang, &mag_int);		
+		r_OUT(1, 0) = (double)(phase + ang)*180/512;
+		r_OUT(1, 1) = (double)mag_int;
+		
+		svpwm(abc, dq, phase);		
 		r_OUT(0, 0) = (double)abc[0];
 		r_OUT(0, 1) = (double)abc[1];
-		r_OUT(0, 2) = (double)abc[2];				
-		
+		r_OUT(0, 2) = (double)abc[2];
+				
 			    
 	break;
 	case 2:
@@ -243,20 +365,17 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		//angle = ((long)r_IN(4, 0) << 2) & (4096-1);
 		//phi = angle*2*pi/4096;
 				
-		angle = ( (uint32_t)r_IN(4, 0) ) & (1024-1);
-		phi = angle*2*pi/1024;
-		
-		//phi = r_IN(4, 0)*2*pi/4096;
-		
+		phase = ( (uint32_t)r_IN(4, 0) ) & (1024-1);
+
 		// convert abc currents to dq
 		abc[0] = (int32_t)r_IN(0, 0);
 		abc[1] = (int32_t)r_IN(0, 1);
 		abc[2] = (int32_t)r_IN(0, 2);
-		abc_to_dq(abc, dq, angle);
-		//abc_to_dq(&r_IN(0, 0), dq, phi);		
+		abc_to_dq(abc, dq, phase);
+		//abc_to_dq(&r_IN(0, 0), dq, phi);
 		
-		ed = (int32_t)1024*r_IN(1, 0) - dq[0];
-		eq = (int32_t)1024*r_IN(1, 1) - dq[1];
+		ed = (int32_t)r_IN(1, 0) - dq[0]/1024;
+		eq = (int32_t)r_IN(1, 1) - dq[1]/1024;
 
 		update( &dreg, ed );
 		update( &qreg, eq );

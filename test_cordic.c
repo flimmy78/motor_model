@@ -60,7 +60,7 @@ int32_t getatan(int32_t *v)
 	
 	return sumang;	
 }
-
+/*
 double cord_atan(int32_t *v)
 {
 	const double AngTable[] = {45, 26.565, 14.036, 7.125, 3.576, 1.790, 0.895, 0.448, 0.224, 0.112};
@@ -102,6 +102,48 @@ double cord_atan(int32_t *v)
 	
 	return  SumAngle;
 }
+*/
+
+int32_t cord_atan(int32_t *v)
+{
+	const int32_t AngTable[] = {128, 76, 40, 20, 10, 5, 3, 1};
+	const int32_t kc[] = {724,  648, 628,  623,  623,  622,  622,  622};
+	int32_t SumAngle = 0; 
+	int i = 0;
+	int x, y, x1, y1;
+	int ns = 0;
+
+	x = abs(v[0]);
+	y = v[1];
+
+	for(i = 0; i < 8; i++)
+	{		
+		ns++;
+		
+		x1 = x;
+		y1 = y;
+			
+		if(y > 0){
+			x = x1 + (y1 >> i); 
+			y = y1 - (x1 >> i); 
+			SumAngle = SumAngle + AngTable[i]; 
+		}else{
+			x = x1 - (y1 >> i); 
+			y = y1 + (x1 >> i); 
+			SumAngle = SumAngle - AngTable[i]; 
+		}
+		if(y == 0) break;
+	}
+	
+	if(v[0] < 0) SumAngle = MY_PI-SumAngle;		
+	if(SumAngle < 0) SumAngle += 2*MY_PI;
+	
+	printf("ns=%d\n", ns);
+	printf("angle=%.2f\n", SumAngle*180.0/MY_PI);
+	printf("mag=%d\n", (kc[ns-1]*x)/1024);
+	
+	return  SumAngle;
+}
 
 int main(int argc, char *argv[])
 {
@@ -133,3 +175,71 @@ int main(int argc, char *argv[])
 	
 	return 0;
 }
+
+
+/*
+  inline void svpwm(int32_t *abc, int32_t *dq, int32_t phase)
+{
+	int32_t mag;
+	int32_t ang;
+	cord_atan(dq, &ang, &mag);
+	
+	mag /= 1024;
+	int32_t phi = 1023&(phase + ang);
+
+	if(phi<MY_PI/3){
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);	
+		
+		abc[0] = r1+r2;
+		abc[1] = -r1+r2;
+		abc[2] = -r1-r2;
+	}
+	else if(phi<2*MY_PI/3){
+		phi -= MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);		
+		
+		abc[0] = r1-r2;
+		abc[1] = r1+r2;
+		abc[2] = -r1-r2;		
+	}
+	else if(phi<MY_PI){
+		phi -= 2*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);		
+		
+		abc[0] = -r1-r2;
+		abc[1] = r1+r2;
+		abc[2] = -r1+r2;
+	}
+	else if(phi<4*MY_PI/3){
+		phi -= 3*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);		
+		
+		abc[0] = -r1-r2;
+		abc[1] = r1-r2;
+		abc[2] = r1+r2;		
+	}		
+	else if(phi<5*MY_PI/3){
+		phi -= 4*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);
+		
+		abc[0] = -r1+r2;
+		abc[1] = -r1-r2;
+		abc[2] = r1+r2;	
+	}			
+	else if(phi<2*MY_PI){
+		phi -= 5*MY_PI/3;
+		int32_t r1 = mag*mysin(7*MY_PI/3-phi);
+		int32_t r2 = mag*mysin(phi);		
+		
+		abc[0] = +r1+r2;
+		abc[1] = -r1-r2;
+		abc[2] = r1-r2;
+	}
+	
+}
+ */ 

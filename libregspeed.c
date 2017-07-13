@@ -29,9 +29,8 @@ void pi_reg_speed(scicos_block *blk, int flag)
 	static struct pi_reg_state reg = {0.0, 0.0, 0.0, 0.0};
 
 	int32_t e;
-	int32_t enc, denc, denc1;
+	int32_t enc, denc;
 	static int32_t enc1 = 0;
-	static int32_t enc2 = 0;
 	int32_t speed;
 	int32_t smp_rate;
     
@@ -68,7 +67,6 @@ void pi_reg_speed(scicos_block *blk, int flag)
 	    reg.y = 0.0;
 	    
 	    enc1 = 0;
-	    enc2 = 0;
 	break;
     }
 }
