@@ -21,7 +21,7 @@ struct pi_reg_state{
 inline void update(struct pi_reg_state *s, int32_t e)
 {
     s->a += s->ki*e;
-	s->y = e*s->kp + s->a;	
+	s->y = e*s->kp + s->a;		
 }
 
 void pi_reg_speed(scicos_block *blk, int flag)
@@ -31,6 +31,7 @@ void pi_reg_speed(scicos_block *blk, int flag)
 	int32_t e;
 	int32_t enc, denc;
 	static int32_t enc1 = 0;
+	static int32_t enc2 = 0;
 	int32_t speed;
 	int32_t smp_rate;
     
@@ -44,7 +45,8 @@ void pi_reg_speed(scicos_block *blk, int flag)
 		smp_rate = (int32_t)r_IN(5, 0);
 	
 		enc = (int32_t)r_IN(4, 0);
-		denc = enc-enc1;
+		denc = (enc-enc1);
+		enc2 = enc1;
 		enc1 = enc;
 		if(abs(denc) > 1000){
 			if(denc < 0) denc += 4096;
@@ -67,6 +69,7 @@ void pi_reg_speed(scicos_block *blk, int flag)
 	    reg.y = 0.0;
 	    
 	    enc1 = 0;
+	    enc2 = 0;
 	break;
     }
 }
