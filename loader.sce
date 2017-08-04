@@ -16,9 +16,15 @@ end
 if bOK then
   ulink(ilib);
 end
+
+[bOK, ilib] = c_link('pi_reg_position');
+if bOK then
+  ulink(ilib);
+end
 //
 link('libregcur.so', 'pi_reg_cur', 'c');
 link('libregspeed.so', 'pi_reg_speed', 'c');
+link('libregposition.so', 'pi_reg_position', 'c');
 
 // remove temp. variables on stack
 clear my_path;
