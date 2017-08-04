@@ -46,8 +46,8 @@ inline void update(scicos_block *blk, struct pi_reg_state *s, int32_t e, int32_t
 	s->y = e*s->kp + a;
 	s->a = a;
 	
-	r_OUT(1, 0) = e;
-	r_OUT(1, 1) = 0;	
+	//r_OUT(1, 0) = e;
+	//r_OUT(1, 1) = 0;	
 
 	//s->y = 1024*e + s->a;
 	//s->a = s->y - 782*e;
@@ -224,8 +224,8 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		dq[0] = dreg.y;
 		dq[1] = qreg.y;				
 		
-		r_OUT(1, 0) = 0;
-		r_OUT(1, 1) = 0;
+		//r_OUT(1, 0) = 0;
+		//r_OUT(1, 1) = 0;
 		
 		fsat = svpwm(abc, dq, phase);
 		r_OUT(0, 0) = (double)abc[0];
@@ -239,6 +239,23 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		r_OUT(0, 0) = (double)abc[0];
 		r_OUT(0, 1) = (double)abc[1];
 		r_OUT(0, 2) = (double)abc[2];		
+		
+	
+		
+		/*
+		r_OUT(0, 0) = cos_tb[1023&(phase + MY_PI/2)];
+		r_OUT(0, 1) = cos_tb[1023&(phase+4*MY_PI/3 + MY_PI/2)];
+		r_OUT(0, 2) = cos_tb[1023&(phase+2*MY_PI/3 + MY_PI/2)];
+		*/
+		
+		/*dq[0] = 0;
+		dq[1] = 400000;
+		dq_to_abc(abc, dq, phase);
+		r_OUT(0, 0) = (double)abc[0];
+		r_OUT(0, 1) = (double)abc[1];
+		r_OUT(0, 2) = (double)abc[2];		
+		*/
+				
 #endif							    
 
 	break;
@@ -257,6 +274,10 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		abc[0] = (int32_t)r_IN(0, 0);
 		abc[1] = (int32_t)r_IN(0, 1);
 		abc[2] = (int32_t)r_IN(0, 2);
+		
+		r_OUT(1, 0) = abc[0];
+		r_OUT(1, 1) = abc[1];		
+		
 		// convert abc currents to dq
 		abc_to_dq(abc, dq, phase);
 		
@@ -267,6 +288,7 @@ void pi_reg_cur(scicos_block *blk, int flag)
 		// regulators do its work
 		update(blk, &dreg, ed , fsat);
 		update(blk, &qreg, eq , fsat);
+			
 
 	break;
 	case 4:
